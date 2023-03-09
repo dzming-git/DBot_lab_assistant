@@ -1,0 +1,9 @@
+Flask
+numpy
+PyYAML
+python-consul
+ruamel.yaml
+watchdog
+imapclient
+chardet
+cn2an
