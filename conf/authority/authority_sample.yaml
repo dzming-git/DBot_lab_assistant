@@ -1,0 +1,35 @@
+# 该开关开启时，如果QQ在全局配置中有权限调用命令，但是该群并没有在配置文件中，也会做出响应
+GLOBAL_PERMISSION_FIRST: False
+
+PERMISSION_LEVEL:
+  ROOT: &ROOT -1  # 调用所有命令的权限
+  NONE: &NONE 0  # 禁止调用任何命令的权限
+  # 正数权限为一般权限，用户可以自己设置
+  USER: &USER 1
+  ADMIN: &ADMIN 2
+  MASTER: &MASTER 3
+
+AUTHORITIES:
+  # 全局配置
+  GLOBAL:
+    715558579:
+      PERMISSION: *ROOT
+
+  # 私人聊天
+  PRIVATE:
+    # 默认权限
+    DEFAULT:
+      PERMISSION: *NONE
+    347745673:
+      PERMISSION: *ADMIN
+
+  # 以下是群聊天的配置
+  772150487:
+    DEFAULT:
+      PERMISSION: *NONE
+    347745673:
+      PERMISSION: *ADMIN
+  
+  917996925:
+    DEFAULT:
+      PERMISSION: *USER

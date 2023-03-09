@@ -1,3 +1,5 @@
 __pycache__/
 .vscode/
 conf/experiment_info/experiment_info.yaml
+conf/authority/authority.yaml
+data/processed_email_ids.txt

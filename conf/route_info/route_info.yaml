@@ -1,0 +1,21 @@
+# 监控程序配置
+service:
+  name: DBot_lab_assistant
+  ip: 0.0.0.0
+  port: 5706
+  tags:
+    - DBot
+    - DBot_lab_assistant
+    - python
+  endpoints:
+    receive_command: receive_command
+
+# API网关配置
+api_gateway:
+  name: DBot_api_gateway
+
+# 消息代理配置
+message_broker:
+  name: DBot_message_broker
+  consul_key:
+    message_broker_endpoints: message_broker_endpoints  # 与平台程序(https://github.com/dzming-git/DBot_platform)保持一致
