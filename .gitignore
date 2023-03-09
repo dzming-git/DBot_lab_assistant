@@ -1,0 +1,3 @@
+__pycache__/
+.vscode/
+conf/experiment_info/experiment_info.yaml
