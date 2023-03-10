@@ -31,11 +31,11 @@ class EMailServer:
         cls._email_server.login(cls._email_address, email_password)
         cls._email_server.id_({"name": "IMAPClient", "version": imapclient.version.version})
         info = cls._email_server.select_folder('INBOX', readonly = True)
-        
         send_message(f'登录{cls._email_address}成功', gid, qid)
     
     @classmethod
     def download_attachment_by_email_ids(cls, email_ids, gid, qid):
+        
         if type(email_ids) is int:
             email_ids = [email_ids]
         for uid, message_data in cls._email_server.fetch(email_ids, 'RFC822').items():
@@ -69,9 +69,11 @@ class EMailServer:
         try:
             cls._messages = cls._email_server.search()
         except:
-            send_message(f'{cls._email_address}已断开连接，正在重连', gid, qid)
-            cls.connect_email(gid, qid, msg_list)
-            return cls.download_attachment(gid, qid, msg_list)
+            send_message(f'{cls._email_address}已断开连接', gid, qid)
+            cls._auto_download_stop = True
+            return
+            # cls.connect_email(gid, qid, msg_list)
+            # return cls.download_attachment(gid, qid, msg_list)
         processed_email_ids = ExperimentInfo.get_processed_email_ids()
         unprocessed_email_ids = [id for id in cls._messages if id not in processed_email_ids]
         cls.download_attachment_by_email_ids(unprocessed_email_ids, gid, qid)
@@ -84,11 +86,14 @@ class EMailServer:
             flag = msg_list[0]
         if flag == 'start' or flag == '开始':
             def auto_download_attachment_thread(gid, qid):
+                send_message('自动下载已开始', gid, qid)
+                last_check_time = -1
                 while not cls._auto_download_stop:
-                    cls.download_attachment(gid, qid)
-                    time.sleep(30)
-                # 用户终止程序时，退出 IDLE 模式
-                cls._email_server.idle_done()
+                    if last_check_time < 0 or time.time() - last_check_time > 30:
+                        last_check_time = time.time()
+                        cls.download_attachment(gid, qid)
+                    else:
+                        time.sleep(1)
                 send_message('自动下载已退出', gid, qid)
             cls._auto_download_thread = threading.Thread(target=auto_download_attachment_thread, args=(gid, qid,), name='auto_download')
             cls._auto_download_stop = False
