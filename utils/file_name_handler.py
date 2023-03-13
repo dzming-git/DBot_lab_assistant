@@ -41,13 +41,14 @@ def file_name_handler(file_name: str):
     # 拓展0
     file_name = re.sub(r'\d+', lambda x: '{:0>2d}'.format(int(x.group())), file_name)
     # 提取信息
-    pattern = ExperimentInfo.get_pattern()
-    save_path = ExperimentInfo.get_save_path()
-    match = re.search(pattern, file_name)
+    patterns = ExperimentInfo.get_pattern()
+    for pattern in patterns:
+        match = re.search(pattern, file_name)
 
-    if match:
-        time_info = match.group(1)
-        group_id = match.group(2)
-        experiment_id = match.group(3)
-        return file_name, time_info, group_id, experiment_id
-    return None, None, None, None
+        if match:
+            time_info = match.group(1)
+            group_id = match.group(2)
+            experiment_id = match.group(3)
+            file_name_without_type = ExperimentInfo.get_filename_format().format(time_info, group_id, experiment_id)
+            return file_name_without_type, file_type, time_info, group_id, experiment_id
+    return None, None, None, None, None

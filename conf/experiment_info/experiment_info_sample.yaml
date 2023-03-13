@@ -3,7 +3,12 @@ email:
   password: xxx #  不是登陆密码，可以在设置中获取授权密码
   host: imap.163.com
 
-pattern: (周.+)[_(](\d{2})组[_)].+(\d{2})次实验
+pattern: 
+  - (周.+)[_(](\d{2})组[_)].+(\d{2})次实验
+  - (周.+)_第(\d{2})组_.+(\d{2})次实验
+
+filename_format: '{0}_{1}组_第{2}次实验'
+
 save_path: 'D:/实验室工作/08.助教工作/小组作业'
 
 processed_email_ids_path: data/processed_email_ids.txt

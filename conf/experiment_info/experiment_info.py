@@ -6,6 +6,7 @@ class ExperimentInfo:
     _watch_dog = None
     _email_info = {}
     _pattern = ''
+    _filename_format = ''
     _save_path = ''
     _processed_email_ids_path = ''
 
@@ -15,6 +16,7 @@ class ExperimentInfo:
             data = yaml.safe_load(f)
             cls._email_info = data.get('email', {})
             cls._pattern = data.get('pattern', '')
+            cls._filename_format = data.get('filename_format', '')
             cls._save_path = data.get('save_path', '')
             cls._processed_email_ids_path = data.get('processed_email_ids_path', '')
             if not reload_flag:
@@ -33,6 +35,10 @@ class ExperimentInfo:
     @classmethod
     def get_pattern(cls):
         return cls._pattern
+    
+    @classmethod
+    def get_filename_format(cls):
+        return cls._filename_format
     
     @classmethod
     def get_save_path(cls):

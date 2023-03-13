@@ -46,13 +46,22 @@ class EMailServer:
                     if filename:
                         encoding = chardet.detect(decode_header(filename)[0][0])['encoding']
                         decoded_filename = decode_header(filename)[0][0].decode(encoding)
-                        decoded_filename, time_info, group_id, experiment_id = file_name_handler(decoded_filename)
-                        if decoded_filename:
-                            print(decoded_filename)
+                        file_name_without_type, file_type, time_info, group_id, experiment_id = file_name_handler(decoded_filename)
+                        if file_name_without_type:
+                            print(file_name_without_type)
                             folder_path = os.path.join(ExperimentInfo.get_save_path(), time_info, experiment_id)
-                            file_path = os.path.join(folder_path, decoded_filename)
+                            filename = f'{file_name_without_type}.{file_type}'
+                            file_path = os.path.join(folder_path, filename)
+                            if os.path.exists(file_path):
+                                while True:
+                                    index = 1
+                                    filename = f'{file_name_without_type}_{index}.{file_type}'
+                                    new_file_path = os.path.join(folder_path, filename)
+                                    if not os.path.exists(new_file_path):
+                                        file_path = new_file_path
+                                        break
                             os.makedirs(folder_path, exist_ok=True)
-                            send_message(f'{decoded_filename}\n下载成功', gid, qid)
+                            send_message(f'{filename}\n下载成功', gid, qid)
                             # 下载附件
                             with open(file_path, 'wb') as f:
                                 f.write(part.get_payload(decode=True))
