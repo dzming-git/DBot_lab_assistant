@@ -35,7 +35,6 @@ class EMailServer:
     
     @classmethod
     def download_attachment_by_email_ids(cls, email_ids, gid, qid):
-        
         if type(email_ids) is int:
             email_ids = [email_ids]
         for uid, message_data in cls._email_server.fetch(email_ids, 'RFC822').items():
@@ -58,26 +57,28 @@ class EMailServer:
                             with open(file_path, 'wb') as f:
                                 f.write(part.get_payload(decode=True))
                                 f.close()
-                            response = cls._email_server.fetch(uid, ['FLAGS'])
-                            flags = response[uid][b'FLAGS']
-                            if b'\\Seen' not in flags:
-                                cls._email_server.set_flags(uid, [b'\\Seen'])
 
     @classmethod
     def download_attachment(cls, gid=None, qid=None, msg_list=[]):
         # 搜索所有未读邮件
-        try:
-            cls._messages = cls._email_server.search()
-        except:
-            send_message(f'{cls._email_address}已断开连接', gid, qid)
+        retry_times = 5
+        connected = False
+        for retyr in range(retry_times):
+            try:
+                cls._messages = cls._email_server.search()
+                connected = True
+                break
+            except:
+                send_message(f'{cls._email_address}已断开连接，正在第{retyr+1}次重新连接', gid, qid)
+                cls.connect_email(gid, qid, msg_list)
+        if connected:
+            processed_email_ids = ExperimentInfo.get_processed_email_ids()
+            unprocessed_email_ids = [id for id in cls._messages if id not in processed_email_ids]
+            cls.download_attachment_by_email_ids(unprocessed_email_ids, gid, qid)
+            ExperimentInfo.note_processed_email_ids(unprocessed_email_ids)
+        else:
+            send_message(f'连接失败', gid, qid)
             cls._auto_download_stop = True
-            return
-            # cls.connect_email(gid, qid, msg_list)
-            # return cls.download_attachment(gid, qid, msg_list)
-        processed_email_ids = ExperimentInfo.get_processed_email_ids()
-        unprocessed_email_ids = [id for id in cls._messages if id not in processed_email_ids]
-        cls.download_attachment_by_email_ids(unprocessed_email_ids, gid, qid)
-        ExperimentInfo.note_processed_email_ids(unprocessed_email_ids)
 
     @classmethod
     def auto_download_attachment(cls, gid=None, qid=None, msg_list=[]):
