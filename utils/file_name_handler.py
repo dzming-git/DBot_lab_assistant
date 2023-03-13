@@ -12,7 +12,7 @@ def pad_zero(match):
 def connector2underline(file_name):
     connectors = [' ', '+', '-', '——', '—']
     for connector in connectors:
-        file_name.replace(connector, '_')
+        file_name = file_name.replace(connector, '_')
     return file_name
 
 def chinese_to_arabic(text):
