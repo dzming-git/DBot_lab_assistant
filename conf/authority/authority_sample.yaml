@@ -1,13 +1,14 @@
 # 该开关开启时，如果QQ在全局配置中有权限调用命令，但是该群并没有在配置文件中，也会做出响应
 GLOBAL_PERMISSION_FIRST: False
 
+# 负数权限等级均为特殊权限，自设权限时请使用非负数
 PERMISSION_LEVEL:
-  ROOT: &ROOT -1  # 调用所有命令的权限
-  NONE: &NONE 0  # 禁止调用任何命令的权限
-  # 正数权限为一般权限，用户可以自己设置
-  USER: &USER 1
-  ADMIN: &ADMIN 2
-  MASTER: &MASTER 3
+  INTERNAL: &INTERNAL -3  # 只准内部调用，不对用户开放
+  ROOT: &ROOT -2  # 最高权限，可以调用一切外部调用的指令
+  NONE: &NONE -1  # 禁止使用一切指令
+  USER: &USER 0
+  ADMIN: &ADMIN 1
+  MASTER: &MASTER 2
 
 AUTHORITIES:
   # 全局配置

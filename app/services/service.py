@@ -5,9 +5,21 @@ import chardet
 import threading
 import time
 from email.header import decode_header
-from DBot_SDK import send_message
+from DBot_SDK import send_message, Authority
 from conf.experiment_info import ExperimentInfo
 from utils import file_name_handler
+
+def help(gid=None, qid=None, args=[]):
+    permission_level = Authority.get_permission_level(gid, qid)
+    permission = Authority.get_permission_by_level(permission_level)
+    if gid:
+        message = f'[CQ:at,qq={qid}]\n'
+    message = f'关键词 {KEYWORD}\n当前权限 {permission}\n可调用指令如下\n'
+    for command in list(func_dict.keys()):
+        if Authority.check_command_permission(command, gid, qid):
+            message += f'  - {command}\n'
+    send_message(message.strip(), gid, qid)
+
 
 class EMailServer:
     _email_server = None
@@ -110,17 +122,22 @@ class EMailServer:
             cls._auto_download_thread.start()
         elif flag == 'stop' or flag == '停止':
             cls._auto_download_stop = True
-        
+
+KEYWORD = '#助教'
 func_dict = {
-    '#连接邮箱': {
+    '帮助':{
+        'func': help,
+        'permission': 'USER'
+        },
+    '连接邮箱': {
         'func': EMailServer.connect_email,
         'permission': 'ROOT'
         },
-    '#下载附件':{
+    '下载附件':{
         'func': EMailServer.download_attachment,
         'permission': 'ROOT'
         },
-    '#自动下载':{
+    '自动下载':{
         'func': EMailServer.auto_download_attachment,
         'permission': 'ROOT'
         },

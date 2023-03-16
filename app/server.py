@@ -1,7 +1,7 @@
 # service.py
 import time
 from DBot_SDK import ConfigFromUser, server_thread
-from app.services.service import func_dict
+from app.services.service import func_dict, KEYWORD
 from conf.experiment_info import ExperimentInfo
 
 def load_conf():
@@ -11,6 +11,7 @@ def load_conf():
 
 if __name__ == '__main__': 
     load_conf()
+    ConfigFromUser.set_keyword(KEYWORD)
     ConfigFromUser.set_func_dict(func_dict)
     server_thread.start()
     while True:
