@@ -1,5 +1,5 @@
 import yaml
-from DBot_SDK import WatchDogThread
+from dzmicro import WatchDogThread
 
 class ExperimentInfo:
     _config_path = ''
@@ -54,7 +54,7 @@ class ExperimentInfo:
         with open(cls._processed_email_ids_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
                 try:
-                    processed_email_ids = [int(line.strip())]
+                    processed_email_ids.append(int(line.strip()))
                 except:
                     pass
             f.close()

@@ -7,7 +7,3 @@ service:
     - DBot
     - DBot_lab_assistant
     - python
-
-# 消息代理配置
-message_broker:
-  name: DBot_message_broker

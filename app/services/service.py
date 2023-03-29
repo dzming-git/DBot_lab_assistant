@@ -3,9 +3,26 @@ import os
 import email
 import threading
 import time
-from DBot_SDK import send_message
+from dzmicro import send_message
 from conf.experiment_info import ExperimentInfo
 from utils import file_name_handler, subject_name_handler, decode_name
+
+def help(task):
+    from dzmicro import Authority
+    authority = Authority()
+    source_id = task.get('source_id', None)
+    platform = task.get('platform', None)
+    gid, qid = source_id
+    permission_level = authority.get_permission_level(source_id)
+    permission = authority.get_permission_by_level(permission_level)
+    if gid:
+        message = f'[CQ:at,qq={qid}]\n'
+    message = f'关键词 {KEYWORD}\n当前权限 {permission}\n可调用指令如下\n'
+    for command in list(func_dict.keys()):
+        if authority.check_command_permission(command, source_id):
+            message += f'  - {command}\n'
+    send_message(message.strip(), source_id, platform)
+
 
 class EMailServer:
     _email_server = None
@@ -15,7 +32,10 @@ class EMailServer:
     _auto_download_stop = True
 
     @classmethod
-    def connect_email(cls, gid=None, qid=None, args=[]):
+    def connect_email(cls, task):
+        source_id = task.get('source_id', None)
+        platform = task.get('platform', None)
+        gid, qid = source_id
         message_parts = []
         if gid:
             message_parts.append(f'[CQ:at,qq={qid}]')
@@ -29,10 +49,10 @@ class EMailServer:
         cls._email_server.login(cls._email_address, email_password)
         cls._email_server.id_({"name": "IMAPClient", "version": imapclient.version.version})
         info = cls._email_server.select_folder('INBOX', readonly = True)
-        send_message(f'登录{cls._email_address}成功', gid, qid)
+        send_message(f'登录{cls._email_address}成功', source_id, platform)
     
     @classmethod
-    def download_attachment_by_email_id(cls, email_id, gid, qid):
+    def download_attachment_by_email_id(cls, email_id, source_id, platform):
         output = f'{email_id}\n'
         for uid, message_data in cls._email_server.fetch(email_id, 'RFC822').items():
             email_message = email.message_from_bytes(message_data[b'RFC822'])
@@ -54,7 +74,7 @@ class EMailServer:
                                 file_name_without_type, file_type, time_info, group_id, experiment_id = file_name_handler(decoded_subject)
                             except:
                                 output += f'subject: {decoded_subject} file: {decoded_filename}未识别\n'
-                                send_message(f'        {decoded_subject}\n未识别', gid, qid)
+                                send_message(f'        {decoded_subject}\n未识别', source_id, platform)
                                 continue
                         if file_name_without_type:
                             print(file_name_without_type)
@@ -72,7 +92,7 @@ class EMailServer:
                                     index += 1
                             os.makedirs(folder_path, exist_ok=True)
                             output += f'        file: {filename}下载成功\n'
-                            send_message(f'{filename}\n下载成功', gid, qid)
+                            send_message(f'{filename}\n下载成功', source_id, platform)
                             # 下载附件
                             with open(file_path, 'wb') as f:
                                 f.write(part.get_payload(decode=True))
@@ -80,52 +100,64 @@ class EMailServer:
         return output
 
     @classmethod
-    def download_attachment(cls, gid=None, qid=None, args=[]):
+    def download_attachment(cls, task):
+        source_id = task.get('source_id', None)
+        platform = task.get('platform', None)
+        args = task.get('args', [])
+        gid, qid = source_id
         # 搜索所有未读邮件
         retry_times = 5
         connected = False
-        for retyr in range(retry_times):
+        for retry in range(retry_times):
             try:
                 cls._messages = cls._email_server.search()
                 connected = True
                 break
             except:
-                send_message(f'{cls._email_address}已断开连接，正在第{retyr+1}次重新连接', gid, qid)
-                cls.connect_email(gid, qid, args)
+                send_message(f'{cls._email_address}已断开连接，正在第{retry+1}次重新连接', source_id, platform)
+                cls.connect_email(task)
         if connected:
             processed_email_ids = ExperimentInfo.get_processed_email_ids()
             unprocessed_email_ids = [id for id in cls._messages if id not in processed_email_ids]
             for unprocessed_email_id in unprocessed_email_ids:
-                output = cls.download_attachment_by_email_id(unprocessed_email_id, gid, qid)
+                output = cls.download_attachment_by_email_id(unprocessed_email_id, source_id, platform)
                 ExperimentInfo.note_processed_email_ids(output)
         else:
             send_message(f'连接失败', gid, qid)
             cls._auto_download_stop = True
 
     @classmethod
-    def auto_download_attachment(cls, gid=None, qid=None, args=[]):
+    def auto_download_attachment(cls, task):
+        source_id = task.get('source_id', None)
+        platform = task.get('platform', None)
+        args = task.get('args', [])
+        gid, qid = source_id
         flag = 'start'
         if args:
             flag = args[0]
         if flag == 'start' or flag == '开始':
-            def auto_download_attachment_thread(gid, qid):
-                send_message('自动下载已开始', gid, qid)
+            def auto_download_attachment_thread(source_id, platform):
+                send_message('自动下载已开始', source_id, platform)
                 last_check_time = -1
                 while not cls._auto_download_stop:
                     if last_check_time < 0 or time.time() - last_check_time > 30:
                         last_check_time = time.time()
-                        cls.download_attachment(gid, qid)
+                        cls.download_attachment(task)
                     else:
                         time.sleep(1)
-                send_message('自动下载已退出', gid, qid)
-            cls._auto_download_thread = threading.Thread(target=auto_download_attachment_thread, args=(gid, qid,), name='auto_download')
+                send_message('自动下载已退出', source_id, platform)
+            cls._auto_download_thread = threading.Thread(target=auto_download_attachment_thread, args=(source_id, platform,), name='auto_download')
             cls._auto_download_stop = False
             cls._auto_download_thread.start()
         elif flag == 'stop' or flag == '停止':
             cls._auto_download_stop = True
 
-KEYWORD = '助教'
+KEYWORD = '#助教'
 func_dict = {
+    '帮助': {
+        'func': help,
+        'permission': 'USER'
+        },
     '连接邮箱': {
         'func': EMailServer.connect_email,
         'permission': 'ROOT'
