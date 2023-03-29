@@ -52,12 +52,18 @@ class ExperimentInfo:
     def get_processed_email_ids(cls):
         processed_email_ids = []
         with open(cls._processed_email_ids_path, 'r', encoding='utf-8') as f:
-            processed_email_ids = [int(line.strip()) for line in f.readlines()]
+            for line in f.readlines():
+                try:
+                    processed_email_ids = [int(line.strip())]
+                except:
+                    pass
             f.close()
         return processed_email_ids
     
     @classmethod
     def note_processed_email_ids(cls, ids):
+        if type(ids) is not list:
+            ids = [ids]
         processed_email_ids = cls.get_processed_email_ids()
         with open(cls._processed_email_ids_path, 'a', encoding='utf-8') as f:
             for id in ids:
